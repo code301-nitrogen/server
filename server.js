@@ -18,14 +18,14 @@ const client = new pg.Client(process.env.DATABASE_URL);
 
 client.connect();
 
-app.get('api/v1/nasa', (req, res) => {
-    const nasaUrl = 'https://api.nasa.gov/mars-photos/api/v1/rovers/';
-    const test = `https://api.nasa.gov/mars-photos/api/v1/rovers/opportunity/photos?earth_date=2016-12-13&camera=fhaz&api_key=${MARS_API_KEY}`;
+app.get('/api/v1/nasa', (req, res) => {
+    // const nasaUrl = 'https://api.nasa.gov/mars-photos/api/v1/rovers/';
+    const test = `https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?earth_date=2015-12-15&camera=chemcam&api_key=hJBJ2YBwo2K4VGfoZFoKtxvICroQ4cg4qMb9HpTT`;
     superagent.get(test)
     //  superagent.get(`${nasaUrl}${roverName}/photos?earth_date=${date}&camera=${camera}&api_key=${MARS_API_KEY}`)
         .end((err, resp) => {
             const topPix = resp.body.photos.slice(0,25).map(image => {
-                const returnImg = {
+                let returnImg = {
                     id: image.id,
                     rover: image.rover.name,
                     camera: image.camera.name,
@@ -36,4 +36,9 @@ app.get('api/v1/nasa', (req, res) => {
             console.log(topPix);
             res.send(topPix);
         });
+});
+
+app.listen(PORT, () => {
+    console.log(`Listening on Port ${PORT}`);
+
 });
