@@ -19,11 +19,15 @@ const client = new pg.Client(process.env.DATABASE_URL);
 client.connect();
 
 app.get('/api/v1/nasa', (req, res) => {
-    // const nasaUrl = 'https://api.nasa.gov/mars-photos/api/v1/rovers/';
+    const rover = req.query.rover;
+    const camera = req.query.camera;
+    const date = req.query.date;
+    
+    const nasaUrl = 'https://api.nasa.gov/mars-photos/api/v1/rovers/';
     console.log(req.query);
-    const test = `https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?earth_date=2015-12-15&camera=chemcam&api_key=hJBJ2YBwo2K4VGfoZFoKtxvICroQ4cg4qMb9HpTT`;
-    superagent.get(test)
-    //  superagent.get(`${nasaUrl}${roverName}/photos?earth_date=${date}&camera=${camera}&api_key=${MARS_API_KEY}`)
+    // const test = `https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?earth_date=2015-12-15&camera=chemcam&api_key=hJBJ2YBwo2K4VGfoZFoKtxvICroQ4cg4qMb9HpTT`;
+    // superagent.get(test)
+    superagent.get(`${nasaUrl}${rover}/photos?earth_date=${date}&camera=${camera}&api_key=${MARS_API_KEY}`)
         .end((err, resp) => {
             const topPix = resp.body.photos.slice(0,25).map(image => {
                 let returnImg = {
