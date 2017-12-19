@@ -25,11 +25,6 @@ app.get('/api/v1/nasa', (req, res) => {
 
     const nasaUrl = 'https://api.nasa.gov/mars-photos/api/v1/rovers/';
     console.log(req.query);
-    //const test = `https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?earth_date=2016-04-30&api_key=hJBJ2YBwo2K4VGfoZFoKtxvICroQ4cg4qMb9HpTT`;
-    //superagent.get(test)
-    .then(function(resp) {
-        res.send(JSON.stringify(resp.body));
-    });
 
     superagent.get(`${nasaUrl}${rover}/photos?earth_date=${date}&camera=${camera}&api_key=${MARS_API_KEY}`)
         .end((err, resp) => {
