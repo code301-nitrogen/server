@@ -22,21 +22,84 @@ app.post('/api/v1/save', (req, res) =>{
     const user = req.body.user;
     console.log(user);
     console.log(req.body);
+    console.log(req.body.image_id);
     //changed image_id to id so it works with charlie's table. change to image_id
-    client.query(`
-    INSERT INTO images (id, rover, camera, url) VALUES ($1, $2, $3, $4);
-    `,[
-            req.body.image_id,
-            req.body.rover,
-            req.body.camera,
-            req.body.url
+    //See if user with that username exist
+    // 'SELECT * FROM users where name = req.body.user'
+    // const userId = await client.query(`SELECT id FROM users WHERE name = ${req.body.user}`);
+    //  console.log('this is the user id');
+    //  console.log(userId);
+    //If not create
 
-        ])
-        .then(data => res.status(204).send('image saved'))
-        .catch(console.error);
+    //See if image with that image id exist
+    // 'SELECT * FROM images WHERE image_id = req.body.image_id'
+    //if not create
+    //Using that users id number and image_id number, put in join faves table
+    // 'INSERT into favorites (user_id, images_id) VALES ($1, $2)'
     
-    // res.send('success');
 
+
+    client.query(`
+    SELECT id FROM users WHERE name = $1`,[req.body.user])
+        .then (data => {
+            if(data.rows.length > 0) {
+                const userId = data.rows[0].id;
+                getImages(userId);
+            } else {
+                client.query(`INSERT INTO users (name) VALUES ($1) RETURNING id`, [req.body.user], (err,data) => {
+                    getImages(data.rows[0].id);
+                    if (err) console.log(err);
+                });
+            }
+        });
+    function getImages (userId) {
+        console.log('getImages', userId);
+        // client.query(`SELECT id FROM images WHERE url = ${req.body.url}`)
+        // .then ()
+        res.send('done');
+    }
+
+
+
+    // client.query(`
+    // INSERT INTO images (image_id, rover, camera, url) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING;   
+    // `,[
+    //         req.body.image_id,
+    //         req.body.rover,
+    //         req.body.camera,
+    //         req.body.url,
+            
+
+    //     ])
+    //     .then(users => {
+    //         client.query(`
+    //         INSERT INTO users (name) VALUES ($1) CONFLICT RETURNING id;
+    //         `,[
+    //                 req.body.user
+    //             ]);
+    //     })
+    //     .then(userId => {
+    //          client.query(`
+    //          SELECT id FROM users WHERE name = req.body.user
+    //          `)
+    //       })
+    //     .then(data => res.status(204).send('image saved'))
+    //     .catch(console.error);
+    
+    // // res.send('success');
+    // .then(userId => {
+    //     client.query(`
+    //     SELECT id FROM users WHERE name = req.body.user
+    //     `)
+    //     .then(userId => {
+    //        client.query(`
+    //        INSERT into favorites (user_id) VALUES ($1);
+    //        `,[
+    //            userId
+    //        ]) 
+
+    //     })
+    // })
 });
 
 app.get('/api/v1/nasa', (req, res) => {
