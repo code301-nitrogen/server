@@ -18,26 +18,11 @@ const client = new pg.Client(process.env.DATABASE_URL);
 
 client.connect();
 
-app.post('/api/v1/save', (req, res) =>{
+app.post('/api/v1/favorites', (req, res) =>{
     const user = req.body.user;
     console.log(user);
     console.log(req.body);
     console.log(req.body.image_id);
-    //changed image_id to id so it works with charlie's table. change to image_id
-    //See if user with that username exist
-    // 'SELECT * FROM users where name = req.body.user'
-    // const userId = await client.query(`SELECT id FROM users WHERE name = ${req.body.user}`);
-    //  console.log('this is the user id');
-    //  console.log(userId);
-    //If not create
-
-    //See if image with that image id exist
-    // 'SELECT * FROM images WHERE image_id = req.body.image_id'
-    //if not create
-    //Using that users id number and image_id number, put in join faves table
-    // 'INSERT into favorites (user_id, images_id) VALES ($1, $2)'
-    
-
 
     client.query(`
     SELECT id FROM users WHERE name = $1`,[req.body.user])
@@ -54,52 +39,31 @@ app.post('/api/v1/save', (req, res) =>{
         });
     function getImages (userId) {
         console.log('getImages', userId);
-        // client.query(`SELECT id FROM images WHERE url = ${req.body.url}`)
-        // .then ()
+        client.query(`SELECT image_id FROM images WHERE url = $1`, [req.body.url])
+            .then (data => {
+                if (data.rows.length > 0){
+                    const imageId = data.rows[0].image_id;
+                    addToFavorites(imageId,userId);
+                } else {
+                    client.query(`INSERT INTO images (image_id, rover, camera, url) VALUES ($1, $2, $3, $4) RETURNING image_id` , [req.body.image_id, req.body.rover, req.body.camera, req.body.url], (err,data) =>{
+                        addToFavorites(data.rows[0].image_id, userId);
+                        console.log('geturl', data.rows[0].image_id);
+                        if (err) console.log(err);
+                    });
+                }
+
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        
+    }
+    function addToFavorites (imageId, userId){
+        console.log(imageId,userId);
+        client.query('INSERT INTO favorites (user_id, images_id) VALUES ($1, $2)', [userId, imageId]);
         res.send('done');
     }
 
-
-
-    // client.query(`
-    // INSERT INTO images (image_id, rover, camera, url) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING;   
-    // `,[
-    //         req.body.image_id,
-    //         req.body.rover,
-    //         req.body.camera,
-    //         req.body.url,
-            
-
-    //     ])
-    //     .then(users => {
-    //         client.query(`
-    //         INSERT INTO users (name) VALUES ($1) CONFLICT RETURNING id;
-    //         `,[
-    //                 req.body.user
-    //             ]);
-    //     })
-    //     .then(userId => {
-    //          client.query(`
-    //          SELECT id FROM users WHERE name = req.body.user
-    //          `)
-    //       })
-    //     .then(data => res.status(204).send('image saved'))
-    //     .catch(console.error);
-    
-    // // res.send('success');
-    // .then(userId => {
-    //     client.query(`
-    //     SELECT id FROM users WHERE name = req.body.user
-    //     `)
-    //     .then(userId => {
-    //        client.query(`
-    //        INSERT into favorites (user_id) VALUES ($1);
-    //        `,[
-    //            userId
-    //        ]) 
-
-    //     })
-    // })
 });
 
 app.get('/api/v1/nasa', (req, res) => {
