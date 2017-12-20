@@ -18,6 +18,17 @@ const client = new pg.Client(process.env.DATABASE_URL);
 
 client.connect();
 
+app.get('/api/v1/favorites', (req, res) => {
+    client.query(`SELECT url
+    FROM images
+    INNER JOIN favorites
+    ON (favorites.images_id = images.image_id)
+    WHERE favorites.user_id = 10`)
+
+        .then(data => res.send(data.rows));
+});
+    
+
 app.post('/api/v1/favorites', (req, res) =>{
     const user = req.body.user;
     console.log(user);
