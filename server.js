@@ -18,24 +18,51 @@ const client = new pg.Client(process.env.DATABASE_URL);
 
 client.connect();
 
-app.post('/api/v1/save', (req, res) =>{
+app.post('/api/v1/favorites', (req, res) =>{
     const user = req.body.user;
     console.log(user);
     console.log(req.body);
-    //changed image_id to id so it works with charlie's table. change to image_id
-    client.query(`
-    INSERT INTO images (id, rover, camera, url) VALUES ($1, $2, $3, $4);
-    `,[
-            req.body.image_id,
-            req.body.rover,
-            req.body.camera,
-            req.body.url
+    console.log(req.body.image_id);
 
-        ])
-        .then(data => res.status(204).send('image saved'))
-        .catch(console.error);
-    
-    // res.send('success');
+    client.query(`
+    SELECT id FROM users WHERE name = $1`,[req.body.user])
+        .then (data => {
+            if(data.rows.length > 0) {
+                const userId = data.rows[0].id;
+                getImages(userId);
+            } else {
+                client.query(`INSERT INTO users (name) VALUES ($1) RETURNING id`, [req.body.user], (err,data) => {
+                    getImages(data.rows[0].id);
+                    if (err) console.log(err);
+                });
+            }
+        });
+    function getImages (userId) {
+        console.log('getImages', userId);
+        client.query(`SELECT image_id FROM images WHERE url = $1`, [req.body.url])
+            .then (data => {
+                if (data.rows.length > 0){
+                    const imageId = data.rows[0].image_id;
+                    addToFavorites(imageId,userId);
+                } else {
+                    client.query(`INSERT INTO images (image_id, rover, camera, url) VALUES ($1, $2, $3, $4) RETURNING image_id` , [req.body.image_id, req.body.rover, req.body.camera, req.body.url], (err,data) =>{
+                        addToFavorites(data.rows[0].image_id, userId);
+                        console.log('geturl', data.rows[0].image_id);
+                        if (err) console.log(err);
+                    });
+                }
+
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        
+    }
+    function addToFavorites (imageId, userId){
+        console.log(imageId,userId);
+        client.query('INSERT INTO favorites (user_id, images_id) VALUES ($1, $2)', [userId, imageId]);
+        res.send('done');
+    }
 
 });
 
