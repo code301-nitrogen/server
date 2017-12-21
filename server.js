@@ -19,7 +19,6 @@ const client = new pg.Client(process.env.DATABASE_URL);
 client.connect();
 
 app.get('/api/v1/favorites', (req, res) => {
-    console.log(req.query.user);
     client.query(`
     SELECT id FROM users WHERE name = $1`,[req.query.user])
         .then(data => 
@@ -31,14 +30,8 @@ app.get('/api/v1/favorites', (req, res) => {
 
         .then(data => res.send(data.rows));
 });
-    
 
 app.post('/api/v1/favorites', (req, res) =>{
-    const user = req.body.user;
-    console.log(user);
-    console.log(req.body);
-    console.log(req.body.image_id);
-
     client.query(`
     SELECT id FROM users WHERE name = $1`,[req.body.user])
         .then (data => {
@@ -71,7 +64,6 @@ app.post('/api/v1/favorites', (req, res) =>{
             .catch(err => {
                 console.log(err);
             });
-        
     }
     function addToFavorites (imageId, userId){
         console.log(imageId,userId);
@@ -85,13 +77,10 @@ app.get('/api/v1/nasa', (req, res) => {
     const rover = req.query.rover;
     const camera = req.query.camera;
     const date = req.query.date;
-
     const nasaUrl = 'https://api.nasa.gov/mars-photos/api/v1/rovers/';
-    // console.log(req.query);
 
     superagent.get(`${nasaUrl}${rover}/photos?earth_date=${date}&camera=${camera}&api_key=${MARS_API_KEY}`)
         .end((err, resp) => {
-            // console.log(resp.body, 'not working');
             const topPix = resp.body.photos.slice(0,25).map(image => {
                 const returnImg = {
                     id: image.id,
